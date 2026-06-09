@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dünya Kupası Penaltı</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: radial-gradient(circle, #0a2f1d 0%, #04140c 100%);
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            overflow: hidden;
+            user-select: none;
+        }
+        .container {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+        h1 {
+            color: #d4af37; /* Gold */
+            margin: 0 0 10px 0;
+            font-size: 24px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 300px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid #d4af37;
+            margin-bottom: 20px;
+        }
+        /* Kale Bölgesi */
+        .stadium {
+            position: relative;
+            width: 100%;
+            max-width: 340px;
+            height: 200px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 3px solid #fff;
+            border-bottom: none;
+            border-radius: 10px 10px 0 0;
+            margin-bottom: 30px;
+        }
+        /* Kaleci */
+        .goalkeeper {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 70px;
+            background: #e74c3c;
+            border-radius: 10px 10px 0 0;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        /* Şut Butonları */
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 100%;
+            max-width: 300px;
+        }
+        .btn {
+            background: linear-gradient(135deg, #d4af37 0%, #aa8515 100%);
+            border: none;
+            color: #000;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            transition: transform 0.1s;
+        }
+        .btn:active {
+            transform: scale(0.95);
+        }
+        .result-msg {
+            height: 30px;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2ecc71;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🏆 DÜNYA KUPASI</h1>
+    
+    <div class="stats">
+        <div>Hak: <span id="hak">5</span></div>
+        <div>Gol: <span id="gol">0</span></div>
+    </div>
+
+    <div class="result-msg" id="msg">Şut açısını seç ve vur!</div>
+
+    <div class="stadium">
+        <div class="goalkeeper" id="gk">🧤</div>
+    </div>
+
+    <div class="controls" id="controls">
+        <button class="btn" onclick="shoot(1)">Sol Üst</button>
+        <button class="btn" onclick="shoot(2)">Orta Üst</button>
+        <button class="btn" onclick="shoot(3)">Sağ Üst</button>
+        <button class="btn" onclick="shoot(4)">Sol Alt</button>
+        <button class="btn" onclick="shoot(5)">Orta Alt</button>
+        <button class="btn" onclick="shoot(6)">Sağ Alt</button>
+    </div>
+</div>
+
+<script>
+    // Telegram WebApp başlatma
+    const tg = window.Telegram.WebApp;
+    tg.expand(); // Ekranı tam boy yap
+
+    let hak = 5;
+    let gol = 0;
+    const gkPozisyonlari = {
+        1: { left: '15%', bottom: '40px' },
+        2: { left: '50%', bottom: '40px' },
+        3: { left: '85%', bottom: '40px' },
+        4: { left: '15%', bottom: '0px' },
+        5: { left: '50%', bottom: '0px' },
+        6: { left: '85%', bottom: '0px' }
+    };
+
+    function shoot(secim) {
+        if (hak <= 0) return;
+
+        // Kaleci rastgele bir köşeye atlasın (1-6 arası)
+        const gkSecim = Math.floor(Math.random() * 6) + 1;
+        const gk = document.getElementById('gk');
+        
+        // Kaleciyi hareket ettir
+        gk.style.left = gkPozisyonlari[gkSecim].left;
+        gk.style.bottom = gkPozisyonlari[gkSecim].bottom;
+
+        hak--;
+        document.getElementById('hak').innerText = hak;
+
+        const msg = document.getElementById('msg');
+        
+        // Kaleciyle oyuncu aynı köşeyi seçmediyse GOL!
+        if (secim !== gkSecim) {
+            gol++;
+            document.getElementById('gol').innerText = gol;
+            msg.innerText = "⚽ MUHTEŞEM GOL!";
+            msg.style.color = "#2ecc71";
+        } else {
+            msg.innerText = "❌ KALECİ KURTARDI!";
+            msg.style.color = "#e74c3c";
+        }
+
+        // Kaleciyi eski yerine al (Efekt için hafif gecikmeli)
+        setTimeout(() => {
+            if(hak > 0) {
+                gk.style.left = '50%';
+                gk.style.bottom = '0px';
+            }
+        }, 800);
+
+        // Oyun bitti mi kontrolü
+        if (hak === 0) {
+            document.getElementById('controls').style.display = 'none';
+            msg.innerText = `Oyun Bitti! Toplam ${gol} Gol attın.`;
+            msg.style.color = "#d4af37";
+            
+            // 3 saniye sonra veriyi bota gönderip kapatıyoruz
+            setTimeout(() => {
+                // Telegram bota gol sayısını gönderiyoruz
+                tg.sendData(JSON.stringify({ "gol_sayisi": gol }));
+                tg.close();
+            }, 2500);
+        }
+    }
+</script>
+</body>
+</html>
